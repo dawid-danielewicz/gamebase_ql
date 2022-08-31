@@ -1,0 +1,97 @@
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+type Query {
+    user(
+      id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
+      email: String @eq @rules(apply: ["prohibits:id", "required_without:id", "email"])
+    ): User @find
+
+    users(
+      name: String @where(operator: "like")
+    ): [User!]! @paginate(defaultCount: 10)
+
+    games: [Game!]! @all
+    game(id: ID @eq): Game @find
+
+    platforms: [Platform!]! @all
+    platform(id: ID @eq): Platform @find
+
+    categories: [Category!]! @all
+    category(id: ID @eq): Category @find
+}
+
+type Mutation {
+    createCategory(
+        name: String! @rules(apply: ["required", "string"])
+    ): Category @create
+
+    updateCategory(
+        id: ID!
+        name: String! @rules(apply: ["required", "string"])
+    ): Category @update
+
+    deleteCategory(
+        id: ID!
+    ): Category @delete
+
+    createPlatform(
+        name: String! @rules(apply: ["required", "string"])
+    ): Platform @create
+
+    updatePlatform(
+        id: ID!
+        name: String! @rules(apply: ["required", "string"])
+    ): Platform @update
+
+    deletePlatform(
+        id: ID!
+    ): Platform @delete
+
+    createGameResolver(
+        name: String! @rules(apply: ["required", "string"])
+        description: String! @rules(apply: ["required", "string"])
+        age: Int! @rules(apply: ["required", "numeric"])
+        year: Int! @rules(apply: ["required", "numeric"])
+        category_id: ID! @rules(apply: ["required", "numeric"])
+        platform_id: ID! @rules(apply: ["required", "numeric"])
+    ): Game @field(resolver: "App\\GraphQl\\Mutations\\CreateGameResolver")
+
+}
+
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    email_verified_at: DateTime
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+type Category {
+    id: ID!
+    name: String!
+    games: [Game!]! @hasMany
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+type Platform {
+    id: ID!
+    name: String!
+    games: [Game!]! @belongsToMany
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+type Game {
+    id: ID!
+    name: String!
+    description: String!
+    age: Int!
+    year: Int!
+    category: Category! @belongsTo
+    platforms: [Platform!]! @belongsToMany
+    created_at: DateTime!
+    updated_at: DateTime!
+}
